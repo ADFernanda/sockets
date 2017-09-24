@@ -1,53 +1,60 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
+#include "lib.h"
 
-#define PORTA 2000
-#define LEN 4096
-
-struct sockaddr_in remoto;
+// void RecebeArquivo(){}
 
 int main (int argc, char *argv[]){
 
-    int sockfd;
-    int len = sizeof(remoto);
-    int slen;
-    char buffer[4096];
-
-    printf("Sou o cliente\n");
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-    if(sockfd == -1){
-        perror("socket ");
+    //verifica quantidade de entradas
+    if (argc != NUM_PARAMS_CLIENTE)
+    {
+        printf("Erro. Verrifique os arqumentos passados para servidorFTP.\n");
+        return 1;
     }
-    else
-    printf("Socket criado com sucesso\n");
+    //verifica se as entradas numéricas são válidas
+    if (VerificaEntradas(argv[2], argv[4]) == 1)
+    {
+        return 1;
+    }
 
+    struct sockaddr_in remoto;
+    int tamBuffer = atoi(argv[4]), portoServidor = atoi(argv[2]), clientefd, len = sizeof(remoto), slen;
+    char *buffer = (char*) calloc (tamBuffer ,sizeof(char)), *hostServidor = argv[1], *nomeArquivo = argv[3];
+
+    struct timeval tvInicial, tvFinal;
+    int tempo = gettimeofday(&tvInicial, NULL);
+    //cria um socket e armazena em clientefd um file descriptor para tal socket
+    clientefd = socket(AF_INET, SOCK_STREAM, 0);
+    if(clientefd == -1){
+        perror("socket");
+    }
+
+    //preenche estrutura de dados do cliente
     remoto.sin_family = AF_INET;
-    remoto.sin_port = htons(PORTA);
-    remoto.sin_addr.s_addr = inet_addr("127.0.0.1");    
+    remoto.sin_port = htons(portoServidor);
+    remoto.sin_addr.s_addr = inet_addr(hostServidor);    
     memset(remoto.sin_zero, 0x0, 8);
-
-    if((connect (sockfd, (struct sockaddr*)&remoto, len)) == -1){
-        perror("connect ");
+    
+    //conecta clientefd ao socket referenciado em addr
+    if((connect (clientefd, (struct sockaddr*)&remoto, len)) == -1){
+        perror("connect");
+        close(clientefd);
         exit(1);
     }
-
-    while(1){
-        if(slen = recv(sockfd, buffer, LEN, 0) > 0){   
-            //buffer[slen-1] = '\0';
-            printf("Mensagem recebida: %s\n", buffer);            
-        }
-        memset(buffer, 0x0, LEN);
-        fgets(buffer, LEN, stdin);
-        send(sockfd, buffer, strlen(buffer), 0);
+    
+    if((send(clientefd, nomeArquivo, strlen(nomeArquivo), 0)) == -1){
+        printf("Erro no envio do nome do arquivo\n");
+        perror("send");
+        close(clientefd);
+        exit(1);
     }
     
-    printf("Cliente encerrado!\n");
-    close(sockfd);
+    //loop para transferência de dados entre servidor e cliente
+    // while(1){
+    //     memset(buffer, 0x0, tamBuffer);
+    // }
+    
+    close(clientefd);
+    tempo = gettimeofday(&tvFinal, NULL);
+    printf("tempo gasto: %lu\n", tvFinal.tv_sec - tvInicial.tv_sec);
     return 0;
 }

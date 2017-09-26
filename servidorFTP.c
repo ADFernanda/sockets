@@ -19,10 +19,13 @@ int main (int argc, char *argv[]){
     struct sockaddr_in servidor, cliente;
     int tamBuffer = atoi(argv[2]), portoServidor = atoi(argv[1]), servidorfd, clientefd,
         sizeCliente = sizeof(cliente), slen;
-    char *buffer = (char*) calloc (tamBuffer ,sizeof(char));
+    char *buffer = (char*) calloc (tamBuffer ,sizeof(char)), *nomeArquivo = (char*) calloc (tamBuffer ,sizeof(char));
 
     struct timeval tvInicial, tvFinal;
     int tempo = gettimeofday(&tvInicial, NULL);
+
+    FILE *arquivo;
+
     //cria um socket e armazena em servidorfd um file descriptor para tal socket
     servidorfd = socket(AF_INET, SOCK_STREAM, 0);
     if((servidorfd) == -1){
@@ -57,21 +60,36 @@ int main (int argc, char *argv[]){
     memset(buffer, 0x0, tamBuffer);
     
     //recebe nome do arquivo
-    if((slen = recv(clientefd, buffer, tamBuffer, 0)) > 0){
-        buffer[slen] = '\0';
-        printf("nome do arquivo: %s\n", buffer);
+    if((slen = recv(clientefd, nomeArquivo, tamBuffer, 0)) > 0){
+        arquivo = fopen(nomeArquivo, "r");
+    }else{
+        fclose(arquivo);
+        free(nomeArquivo);
+        free(buffer);
+        close(servidorfd);
         close(clientefd);
     }
 
-    //abre o arquivo
+    while (!feof(arquivo)) {
+        memset(buffer, 0x0, tamBuffer);
+        fread(buffer, tamBuffer, 1, arquivo);
+        send(clientefd, buffer, tamBuffer, 0);
+    }
+    
+
+    //abre o arquivoz
 
     //loop para transferência de dados entre servidor e cliente
     // while(1){
         //envia o arquivo => send(clientefd, buffer, strlen(buffer), 0)  
     // }    
 
+    fclose(arquivo);
+    free(nomeArquivo);
+    free(buffer);
     close(servidorfd);
+    close(clientefd);
     tempo = gettimeofday(&tvFinal, NULL);
-    printf("tempo gasto: %lu\n", tvFinal.tv_sec - tvInicial.tv_sec);
+    //printf("tempo gasto: %lu\n", tvFinal.tv_sec - tvInicial.tv_sec);
     return 0;
 }

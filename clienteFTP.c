@@ -19,7 +19,8 @@ int main (int argc, char *argv[]){
     struct sockaddr_in remoto;
     int tamBuffer = atoi(argv[4]), portoServidor = atoi(argv[2]), clientefd, len = sizeof(remoto), slen;
     char *buffer = (char*) calloc (tamBuffer ,sizeof(char)), *hostServidor = argv[1], *nomeArquivo = argv[3];
-
+    FILE *arquivoRecebido = fopen("novo.txt", "w+");
+    
     struct timeval tvInicial, tvFinal;
     int tempo = gettimeofday(&tvInicial, NULL);
     //cria um socket e armazena em clientefd um file descriptor para tal socket
@@ -52,9 +53,19 @@ int main (int argc, char *argv[]){
     // while(1){
     //     memset(buffer, 0x0, tamBuffer);
     // }
+
+    while(1){
+        memset(buffer, 0x0, tamBuffer);
+        if(slen = recv(clientefd, buffer, tamBuffer, 0) > 0){
+        fprintf (arquivoRecebido, buffer);
+        }else{            
+            break;
+        }           
+    }
     
+    fclose(arquivoRecebido);
     close(clientefd);
     tempo = gettimeofday(&tvFinal, NULL);
-    printf("tempo gasto: %lu\n", tvFinal.tv_sec - tvInicial.tv_sec);
+    printf("tempo gasto: %lu\n", tvFinal.tv_usec - tvInicial.tv_usec);
     return 0;
 }

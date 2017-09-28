@@ -24,7 +24,7 @@ int main (int argc, char *argv[]){
     FILE *arquivoRecebido = fopen("novo.txt", "w+");
 
     double taxa = 0;
-    unsigned int tempoGastoMs = 0, tempoGastoSeg = 0, numBytes = 0;
+    unsigned int tempoGastoMs = 0, numBytes = 0;
     double numKbytes = 0;
 
     struct timeval  tvInicial, tvFinal;
@@ -75,12 +75,19 @@ int main (int argc, char *argv[]){
     numBytes = i * tamBuffer;
     numKbytes = numBytes/1000;
     
-
     gettimeofday(&tvFinal, NULL);
     unsigned int time_in_sec = (tvFinal.tv_sec) -  (tvInicial.tv_sec);
     unsigned int time_in_mill = (tvFinal.tv_usec / 1000) - (tvInicial.tv_usec / 1000); // convert tv_sec & tv_usec to millisecond
 
-    taxa = (double)numKbytes/time_in_sec;
+    if(time_in_mill == 0){
+        taxa = 0;
+    }
+    else if(time_in_sec == 0){
+        taxa = (double)numKbytes/time_in_mill;
+        taxa = taxa/1000;
+    }else{
+        taxa = (double)numKbytes/time_in_sec;
+    }
 
     printf("Buffer = \%5u byte(s), \%10.2f kbps (\%u bytes em \%3u.\%06u s)\n", tamBuffer, taxa, numBytes, time_in_sec, time_in_mill);
 

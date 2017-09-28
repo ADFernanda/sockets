@@ -20,7 +20,6 @@ int main (int argc, char *argv[]){
     int tamBuffer = atoi(argv[2]), portoServidor = atoi(argv[1]), servidorfd, clientefd,
         sizeCliente = sizeof(cliente), slen;
     char *buffer = (char*) calloc (tamBuffer ,sizeof(char)), nomeArquivo[256];
-
     FILE *arquivo;
 
     //cria um socket e armazena em servidorfd um file descriptor para tal socket
@@ -62,13 +61,27 @@ int main (int argc, char *argv[]){
     //recebe nome do arquivo
     if((slen = recv(clientefd, nomeArquivo, tamBuffer, 0)) > 0){
         nomeArquivo[slen] = '\0';
+
         arquivo = fopen(nomeArquivo, "r");
+        
+        if(!arquivo){
+            free(buffer);
+            close(servidorfd);
+            close(clientefd);
+            perror("fopen");
+            return -1;
+        }
+
     }else{
+        
         fclose(arquivo);
         free(buffer);
         close(servidorfd);
         close(clientefd);
+        perror("recv");
+        return 1;
     }
+
     //loop para transferência de dados entre servidor e cliente
     while (!feof(arquivo)) {
         memset(buffer, 0x0, tamBuffer);

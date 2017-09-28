@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #define NUM_PARAMS_SERVIDOR 3
 #define NUM_PARAMS_CLIENTE 5

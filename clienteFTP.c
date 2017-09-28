@@ -1,4 +1,6 @@
 #include "lib.h"
+#include <arpa/inet.h>
+
 
 // void RecebeArquivo(){}
 
@@ -17,12 +19,18 @@ int main (int argc, char *argv[]){
     }
 
     struct sockaddr_in remoto;
-    int tamBuffer = atoi(argv[4]), portoServidor = atoi(argv[2]), clientefd, len = sizeof(remoto), slen;
+    int tamBuffer = atoi(argv[4]), portoServidor = atoi(argv[2]), clientefd, len = sizeof(remoto), slen, i=0;
     char *buffer = (char*) calloc (tamBuffer ,sizeof(char)), *hostServidor = argv[1], *nomeArquivo = argv[3];
     FILE *arquivoRecebido = fopen("novo.txt", "w+");
+
+    double taxa = 0;
+    unsigned int tempoGastoMs = 0, tempoGastoSeg = 0, numBytes = 0;
+    double numKbytes = 0;
+
+    struct timeval  tvInicial, tvFinal;
+    gettimeofday(&tvInicial, NULL);
     
-    struct timeval tvInicial, tvFinal;
-    int tempo = gettimeofday(&tvInicial, NULL);
+
     //cria um socket e armazena em clientefd um file descriptor para tal socket
     clientefd = socket(AF_INET, SOCK_STREAM, 0);
     if(clientefd == -1){
@@ -50,22 +58,31 @@ int main (int argc, char *argv[]){
     }
     
     //loop para transferência de dados entre servidor e cliente
-    // while(1){
-    //     memset(buffer, 0x0, tamBuffer);
-    // }
-
     while(1){
         memset(buffer, 0x0, tamBuffer);
         if(slen = recv(clientefd, buffer, tamBuffer, 0) > 0){
-        fprintf (arquivoRecebido, buffer);
+            fputs (buffer, arquivoRecebido);
+            i++;
         }else{            
             break;
         }           
     }
     
+    
     fclose(arquivoRecebido);
     close(clientefd);
-    tempo = gettimeofday(&tvFinal, NULL);
-    printf("tempo gasto: %lu\n", tvFinal.tv_usec - tvInicial.tv_usec);
+
+    numBytes = i * tamBuffer;
+    numKbytes = numBytes/1000;
+    
+
+    gettimeofday(&tvFinal, NULL);
+    unsigned int time_in_sec = (tvFinal.tv_sec) -  (tvInicial.tv_sec);
+    unsigned int time_in_mill = (tvFinal.tv_usec / 1000) - (tvInicial.tv_usec / 1000); // convert tv_sec & tv_usec to millisecond
+
+    taxa = (double)numKbytes/time_in_sec;
+
+    printf("Buffer = \%5u byte(s), \%10.2f kbps (\%u bytes em \%3u.\%06u s)\n", tamBuffer, taxa, numBytes, time_in_sec, time_in_mill);
+
     return 0;
 }

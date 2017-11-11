@@ -59,10 +59,10 @@ int main (int argc, char *argv[]){
     memset(buffer, 0x0, tamBuffer);
     
     //recebe nome do arquivo
-    if((slen = recv(clientefd, nomeArquivo, tamBuffer, 0)) > 0){
+    if((slen = recv(clientefd, nomeArquivo, 256, 0)) > 0){
         nomeArquivo[slen] = '\0';
 
-        arquivo = fopen(nomeArquivo, "r");
+        arquivo = fopen(nomeArquivo, "rb");
         
         if(!arquivo){
             free(buffer);

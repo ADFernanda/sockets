@@ -21,7 +21,7 @@ int main (int argc, char *argv[]){
     struct sockaddr_in remoto;
     int tamBuffer = atoi(argv[4]), portoServidor = atoi(argv[2]), clientefd, len = sizeof(remoto), slen, i=0;
     char *buffer = (char*) calloc (tamBuffer ,sizeof(char)), *hostServidor = argv[1], *nomeArquivo = argv[3];
-    FILE *arquivoRecebido = fopen("novo.txt", "w+");
+    FILE *arquivoRecebido = fopen(nomeArquivo, "wb");
 
     double taxa = 0;
     unsigned int tempoGastoMs = 0, numBytes = 0;
@@ -61,7 +61,7 @@ int main (int argc, char *argv[]){
     while(1){
         memset(buffer, 0x0, tamBuffer);
         if(slen = recv(clientefd, buffer, tamBuffer, 0) > 0){
-            fputs (buffer, arquivoRecebido);
+            fwrite (buffer , sizeof(char), sizeof(buffer), arquivoRecebido);
             i++;
         }else{            
             break;
@@ -72,6 +72,7 @@ int main (int argc, char *argv[]){
     fclose(arquivoRecebido);
     close(clientefd);
 
+    //calculos para tempo gasto e taxa
     numBytes = i * tamBuffer;
     numKbytes = numBytes/1000;
     
@@ -84,7 +85,7 @@ int main (int argc, char *argv[]){
     }
     else if(time_in_sec == 0){
         taxa = (double)numKbytes/time_in_mill;
-        taxa = taxa/1000;
+        taxa = taxa*1000;
     }else{
         taxa = (double)numKbytes/time_in_sec;
     }
